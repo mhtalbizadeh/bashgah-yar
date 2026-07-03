@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+// NOTE: using SQLite locally for the fake-data / prototyping phase.
+// Switch provider back to "postgresql" (and Float fields back to
+// Decimal @db.Decimal(10, 2)) when moving to the real database.
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  COACH
+  MEMBER
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum EquipmentStatus {
+  ACTIVE
+  NEEDS_REPAIR
+  BROKEN
+}
+
+enum OrderStatus {
+  PENDING
+  READY
+  DELIVERED
+}
+
+enum SalaryStatus {
+  PENDING
+  PAID
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String?  @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Member relations
+  subscriptions     Subscription[]
+  payments          Payment[]
+  trainingPrograms  TrainingProgram[] @relation("MemberPrograms")
+  orders            Order[]
+  notifications     Notification[]
+
+  // Coach relations
+  coachedPrograms TrainingProgram[] @relation("CoachPrograms")
+  salaries        Salary[]
+
+  @@map("users")
+}
+
+model SubscriptionPlan {
+  id            String   @id @default(cuid())
+  name          String
+  durationDays  Int
+  price         Float
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  memberId  String
+  planId    String
+  startDate DateTime
+  endDate   DateTime
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  member   User             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  memberId       String
+  subscriptionId String?
+  amount         Float
+  status         PaymentStatus @default(PENDING)
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+
+  member       User          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+model TrainingProgram {
+  id        String   @id @default(cuid())
+  coachId   String
+  memberId  String
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach  User @relation("CoachPrograms", fields: [coachId], references: [id], onDelete: Cascade)
+  member User @relation("MemberPrograms", fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("training_programs")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("products")
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  memberId  String
+  productId String
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  member  User    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("orders")
+}
+
+model Equipment {
+  id          String          @id @default(cuid())
+  name        String
+  purchaseDate DateTime
+  status      EquipmentStatus @default(ACTIVE)
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("equipment")
+}
+
+model Salary {
+  id          String       @id @default(cuid())
+  coachId     String
+  amount      Float
+  month       Int
+  year        Int
+  paymentDate DateTime?
+  status      SalaryStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+
+  coach User @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@map("salaries")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
