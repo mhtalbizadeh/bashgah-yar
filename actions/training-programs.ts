@@ -51,6 +51,7 @@ export async function createProgram(data: unknown) {
       userId: parsed.data.memberId,
       title: "برنامه تمرینی جدید",
       message: `برنامه تمرینی «${parsed.data.title}» برای شما ثبت شد.`,
+      type: "INFO",
     },
   });
 

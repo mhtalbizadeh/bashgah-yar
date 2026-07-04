@@ -9,11 +9,19 @@ import {
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { NotificationIcon } from "@/components/ui/NotificationIcon";
 import { getAdminStats } from "@/actions/stats";
+import { getEquipmentStatusOverview, getRevenueGrowthAnalytics } from "@/actions/analytics";
 import { formatDateTime } from "@/lib/format";
+import { RevenueGrowthChart } from "@/components/charts/RevenueGrowthChart";
+import { EquipmentStatusPanel } from "@/components/dashboard/EquipmentStatusPanel";
 
 export default async function AdminDashboardPage() {
-  const stats = await getAdminStats();
+  const [stats, revenueGrowth, equipment] = await Promise.all([
+    getAdminStats(),
+    getRevenueGrowthAnalytics(6),
+    getEquipmentStatusOverview(),
+  ]);
 
   return (
     <div>
@@ -55,6 +63,13 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <RevenueGrowthChart initial={revenueGrowth} />
+        </div>
+        <EquipmentStatusPanel equipment={equipment} />
+      </div>
+
       <Card className="mt-6">
         <CardHeader title="اعلان‌های مهم" />
         <CardContent className="p-0">
@@ -67,13 +82,16 @@ export default async function AdminDashboardPage() {
                   key={notification.id}
                   className="flex items-center justify-between px-4 py-3"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">
-                      {notification.title}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {notification.message}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <NotificationIcon type={notification.type} />
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        {notification.title}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {notification.message}
+                      </p>
+                    </div>
                   </div>
                   <span className="shrink-0 text-xs text-slate-400">
                     {formatDateTime(notification.createdAt)}

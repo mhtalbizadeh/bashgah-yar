@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select } from "@/components/ui/Select";
-import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/Button";
 import { useDialogClose } from "@/components/ui/FormDialog";
 import { createSubscription } from "@/actions/subscriptions";
@@ -26,6 +26,7 @@ export function SubscriptionForm({ members, plans }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<SubscriptionInput>({
     resolver: zodResolver(subscriptionSchema),
@@ -66,11 +67,17 @@ export function SubscriptionForm({ members, plans }: Props) {
         ))}
       </Select>
 
-      <Input
-        label="تاریخ شروع"
-        type="date"
-        {...register("startDate")}
-        error={errors.startDate?.message}
+      <Controller
+        name="startDate"
+        control={control}
+        render={({ field }) => (
+          <DatePicker
+            label="تاریخ شروع"
+            value={field.value}
+            onChange={field.onChange}
+            error={errors.startDate?.message}
+          />
+        )}
       />
 
       {serverError && <p className="text-sm text-danger">{serverError}</p>}

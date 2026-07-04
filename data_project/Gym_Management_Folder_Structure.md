@@ -2,15 +2,14 @@
 
 این سند ساختار پوشه‌بندی فعلی پروژه، تصمیم‌های معماری و نحوه اجرای آن
 را توضیح می‌دهد. تمام ۱۲ صفحه اصلی (طبق سند صفحات پروژه) با داده واقعی
-(نه mock ثابت در کد) پیاده‌سازی شده‌اند، با این تفاوت که در این فاز از
-یک پایگاه‌داده **SQLite محلی** به‌جای PostgreSQL واقعی استفاده می‌شود.
+(نه mock ثابت در کد) پیاده‌سازی شده‌اند و پایگاه‌داده پروژه از فاز
+SQLite محلی به **PostgreSQL واقعی** مهاجرت کرده است.
 
 > **نکته مهم:** نسخه نصب‌شده Next.js در این پروژه (16) با آنچه در دوره
 > آموزشی مدل‌های زبانی رایج است تفاوت‌هایی دارد؛ مهم‌ترین آن تغییر نام
 > `middleware.ts` به `proxy.ts` است (عملکرد یکسان، فقط تغییر نام).
 > Prisma هم در نسخه ۷ دیگر `url` را در `schema.prisma` نمی‌پذیرد و به
-> Driver Adapter (مثل `@prisma/adapter-better-sqlite3` یا
-> `@prisma/adapter-pg`) نیاز دارد.
+> Driver Adapter (`@prisma/adapter-pg`) نیاز دارد.
 
 ## نمای کلی
 
@@ -31,14 +30,13 @@ bashgah-yar/
 │   ├── validations/        # اسکیمای Zod به تفکیک موجودیت
 │   └── generated/prisma/   # خروجی تولیدشده توسط Prisma (گیت‌ایگنور)
 ├── prisma/
-│   ├── schema.prisma       # مدل‌های پایگاه داده (فعلاً provider = sqlite)
+│   ├── schema.prisma       # مدل‌های پایگاه داده (provider = postgresql)
 │   ├── seed.ts             # داده‌های آزمایشی فارسی
 │   └── migrations/
 ├── types/
 │   └── next-auth.d.ts      # افزودن id/phone/role به تایپ‌های Auth.js
 ├── auth.ts                 # پیکربندی Auth.js (Credentials با شماره تماس)
 ├── proxy.ts                # محافظت از مسیرها بر اساس نقش (جایگزین middleware)
-├── dev.db                  # پایگاه‌داده SQLite محلی (گیت‌ایگنور)
 └── data_project/           # مستندات تحلیل و فناوری پروژه
 ```
 
@@ -86,20 +84,29 @@ Credentials Provider و نشست JWT را نگه می‌دارد؛ `authorize()`
 - `requireUser()` — اگر نشستی نباشد به `/login` هدایت می‌کند.
 - `requireRole(role | role[])` — علاوه بر بالا، نقش را هم بررسی می‌کند.
 
-## پایگاه داده — فاز فعلی: SQLite محلی
+## پایگاه داده — PostgreSQL
 
-به‌جای داده Mock ثابت در کد، تصمیم گرفته شد از یک پایگاه‌داده SQLite
-واقعی (با همان اسکیمای Prisma که قرار است روی PostgreSQL هم اجرا شود)
-استفاده شود؛ این‌طور همان کوئری‌ها و Server Actionها بدون تغییر، در
-آینده روی داده واقعی هم کار می‌کنند — فقط کافی است:
+پروژه از یک PostgreSQL محلی (نصب‌شده روی ویندوز، نه Docker) استفاده
+می‌کند. `prisma/schema.prisma` با `provider = "postgresql"` تعریف شده و
+`lib/prisma.ts` / `prisma/seed.ts` از آداپتور `PrismaPg`
+(پکیج `@prisma/adapter-pg`) با `connectionString` استفاده می‌کنند.
 
-1. در `prisma/schema.prisma`: `provider = "sqlite"` → `"postgresql"` و
-   فیلدهای `Float` (مثل `price`, `amount`) → `Decimal @db.Decimal(10, 2)`
-   برگردانند (SQLite از نوع Decimal پشتیبانی نمی‌کند).
-2. در `lib/prisma.ts`: آداپتور `PrismaBetterSqlite3` → `PrismaPg` عوض شود
-   (پکیج `@prisma/adapter-pg` باید دوباره نصب شود).
-3. در `.env`: `DATABASE_URL` به رشته اتصال PostgreSQL واقعی تغییر کند.
-4. `npx prisma migrate dev` روی پایگاه‌داده جدید اجرا شود.
+فیلدهای مالی (`price`, `amount`) عمداً به‌صورت `Float` باقی مانده‌اند
+(نه `Decimal`) چون مبالغ همیشه تومان صحیح بدون اعشار هستند؛ تبدیل به
+`Decimal` نیاز به تبدیل دستی مقدار به `number` در تمام `actions/*.ts`
+داشت (وگرنه پاس‌دادن مقدار `Decimal` از Server Component به Client
+Component در Next.js با خطای serialization مواجه می‌شود) که برای این
+پروژه ارزش پیچیدگی اضافه را نداشت.
+
+`DATABASE_URL` در `.env` به‌صورت زیر تنظیم شده است:
+
+```
+postgresql://postgres:<password>@localhost:5432/bashgah_yar?schema=public
+```
+
+دستورهای مهاجرت اولیه (`prisma migrate dev` روی migrations قدیمی
+SQLite) دوباره از صفر ساخته شدند، چون SQL تولیدشده برای SQLite با
+PostgreSQL سازگار نیست.
 
 ### داده آزمایشی (`prisma/seed.ts`)
 
@@ -184,7 +191,7 @@ React Context) استفاده می‌کند تا بعد از موفقیت، خو
 
 ## متغیرهای محیطی (`.env`)
 
-- `DATABASE_URL` — فعلاً `file:./dev.db` (SQLite محلی).
+- `DATABASE_URL` — رشته اتصال PostgreSQL محلی (`postgresql://postgres:...@localhost:5432/bashgah_yar?schema=public`).
 - `AUTH_SECRET` — کلید امضای نشست Auth.js (با `npx auth secret` تولید شود).
 
 ## دستورهای مفید

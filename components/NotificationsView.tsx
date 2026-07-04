@@ -2,6 +2,7 @@ import { FiBell } from "react-icons/fi";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { NotificationIcon } from "@/components/ui/NotificationIcon";
 import { MarkAllReadButton } from "@/components/forms/MarkAllReadButton";
 import { getMyNotifications, markAsRead } from "@/actions/notifications";
 import { formatDateTime } from "@/lib/format";
@@ -28,9 +29,12 @@ export async function NotificationsView({ userId }: { userId: string }) {
           {notifications.map((notification) => (
             <li key={notification.id} className="flex items-center justify-between gap-4 px-4 py-4">
               <div className="flex items-start gap-3">
-                {!notification.isRead && <Badge tone="primary">جدید</Badge>}
+                <NotificationIcon type={notification.type} />
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{notification.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-800">{notification.title}</p>
+                    {!notification.isRead && <Badge tone="primary">جدید</Badge>}
+                  </div>
                   <p className="mt-1 text-sm text-slate-500">{notification.message}</p>
                   <p className="mt-1 text-xs text-slate-400">
                     {formatDateTime(notification.createdAt)}

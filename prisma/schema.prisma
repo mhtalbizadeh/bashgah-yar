@@ -6,11 +6,8 @@ generator client {
   output   = "../lib/generated/prisma"
 }
 
-// NOTE: using SQLite locally for the fake-data / prototyping phase.
-// Switch provider back to "postgresql" (and Float fields back to
-// Decimal @db.Decimal(10, 2)) when moving to the real database.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 enum Role {
@@ -48,11 +45,17 @@ enum SalaryStatus {
   PAID
 }
 
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
   phone     String   @unique
-  email     String?  @unique
   password  String
   role      Role
   createdAt DateTime @default(now())
@@ -189,12 +192,13 @@ model Salary {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   title     String
   message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

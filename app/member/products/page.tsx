@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/ui/PageHeader";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -11,7 +11,23 @@ export default async function MemberProductsPage() {
 
   return (
     <div>
-      <PageHeader title="مکمل‌ها" description="مشاهده و سفارش مکمل‌های ورزشی" />
+      <div className="relative mb-6 overflow-hidden rounded-2xl shadow-sm">
+        <Image
+          src="/Image.png"
+          alt="ویترین مکمل‌های ورزشی"
+          width={1042}
+          height={210}
+          priority
+          className="h-36 w-full object-cover sm:h-48"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+          <h1 className="text-xl font-bold text-white sm:text-2xl">مکمل‌ها</h1>
+          <p className="mt-1 text-sm text-slate-200">
+            مشاهده و سفارش مکمل‌های ورزشی
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (

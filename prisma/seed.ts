@@ -1,8 +1,8 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../lib/generated/prisma/client";
 
-const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! });
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 const DEMO_PASSWORD = "12345678";
@@ -268,6 +268,7 @@ async function main() {
         userId: members[4].id,
         title: "پایان اشتراک",
         message: "اشتراک شما به پایان رسیده است. برای تمدید با پذیرش تماس بگیرید.",
+        type: "WARNING",
       },
     }),
     prisma.notification.create({
@@ -275,6 +276,7 @@ async function main() {
         userId: members[0].id,
         title: "برنامه تمرینی جدید",
         message: "یک برنامه تمرینی جدید برای شما ثبت شد.",
+        type: "INFO",
       },
     }),
     prisma.notification.create({
@@ -282,6 +284,7 @@ async function main() {
         userId: members[1].id,
         title: "سفارش آماده تحویل",
         message: "سفارش کراتین مونوهیدرات شما آماده تحویل است.",
+        type: "SUCCESS",
       },
     }),
     prisma.notification.create({
@@ -289,6 +292,7 @@ async function main() {
         userId: admin.id,
         title: "سفارش جدید",
         message: "یک سفارش جدید ثبت شد و در انتظار بررسی است.",
+        type: "INFO",
       },
     }),
     prisma.notification.create({
@@ -296,6 +300,7 @@ async function main() {
         userId: coaches[0].id,
         title: "حقوق ماه جاری",
         message: "حقوق ماه جاری شما هنوز پرداخت نشده است.",
+        type: "ERROR",
       },
     }),
   ]);

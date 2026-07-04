@@ -52,6 +52,7 @@ export async function createOrder(data: unknown) {
       userId: admin.id,
       title: "سفارش جدید",
       message: `سفارش جدیدی برای «${product.name}» ثبت شد.`,
+      type: "INFO",
     })),
   });
 
@@ -81,6 +82,7 @@ export async function updateOrderStatus(id: string, data: unknown) {
         userId: order.memberId,
         title: "سفارش آماده تحویل",
         message: `سفارش «${order.product.name}» آماده تحویل است.`,
+        type: "SUCCESS",
       },
     });
   }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
@@ -36,6 +37,7 @@ export function EquipmentForm({ equipment }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<EquipmentInput>({
     resolver: zodResolver(equipmentSchema),
@@ -67,11 +69,17 @@ export function EquipmentForm({ equipment }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <Input label="نام دستگاه" {...register("name")} error={errors.name?.message} />
-      <Input
-        label="تاریخ خرید"
-        type="date"
-        {...register("purchaseDate")}
-        error={errors.purchaseDate?.message}
+      <Controller
+        name="purchaseDate"
+        control={control}
+        render={({ field }) => (
+          <DatePicker
+            label="تاریخ خرید"
+            value={field.value}
+            onChange={field.onChange}
+            error={errors.purchaseDate?.message}
+          />
+        )}
       />
       <Select label="وضعیت" {...register("status")} error={errors.status?.message}>
         {Object.entries(statusLabel).map(([value, label]) => (
